@@ -1,0 +1,330 @@
+
+
+<h1 class="page-header"><span class="glyphicon glyphicon-bell" aria-hidden="true" style="font-size:35px;padding-right:10px "></span>Scheduler</h1>
+<div id="toolbar" class="btn-group">
+    <button type="button" class="btn btn-default" data-toggle="modal" data-target="#AddEntry">
+        <i class="glyphicon glyphicon-plus"></i>
+    </button>
+    <button type="button" class="btn btn-default" data-toggle="modal" data-target="#deleteEntries">
+        <i class="glyphicon glyphicon-trash"></i>
+    </button>
+</div>
+<table id="table" 
+  data-click-to-select="true"
+  data-url="/scheduleritems">
+    <thead>
+    <tr>
+        <th data-field="state" data-checkbox="true"></th>
+        <th data-field="id" data-visible="false">Id</th>
+        <th data-field="name" data-halign="center" data-align="center">Name</th>
+        <th data-field="mon" data-formatter="bool_col" data-halign="center" data-align="center">Mon</th>
+        <th data-field="tue" data-formatter="bool_col" data-halign="center" data-align="center">Tue</th>
+        <th data-field="wed" data-formatter="bool_col" data-halign="center" data-align="center">Wed</th>
+        <th data-field="thu" data-formatter="bool_col" data-halign="center" data-align="center">Thu</th>
+        <th data-field="fri" data-formatter="bool_col" data-halign="center" data-align="center">Fri</th>
+        <th data-field="sat" data-formatter="bool_col" data-halign="center" data-align="center">Sat</th>
+        <th data-field="sun" data-formatter="bool_col" data-halign="center" data-align="center">Sun</th>
+        <th data-field="_time" data-halign="center" data-align="center">Time</th>
+        <th data-field="xon" data-formatter="power_col" data-halign="center" data-align="center">On/Off</th>
+        <th data-field="output" data-halign="center" data-align="center">Output</th>
+    </tr>
+    </thead>
+</table>
+<!-- Modal -->
+<div class="modal fade" id="AddEntry" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+      </div>
+      <div class="modal-body">
+
+      <!-- ENTRY FORM-->
+      <form class="form-horizontal" action="scheduleritems" method="post">
+        <div class="form-group">
+
+          <div class="col-sm-10">
+            <input type="text" style="display:none" class="form-control" id="id" name="id" placeholder="Row Id">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="name" class="col-sm-2 control-label">Name</label>
+          <div class="col-sm-10">
+            <input type="text" class="form-control" id="name" name="name" placeholder="Name">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="inputPassword3" class="col-sm-2 control-label">Time</label>
+          <div class="col-sm-10">
+            <input id="time" type="time" class="form-control" id="time" name="time" placeholder="Time">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="inlineRadioOptions" class="col-sm-2 control-label"></label>
+          <div class="col-sm-10">
+            <label class="checkbox-inline">
+              <input id="sunrise" type="checkbox" id="sunrise" name="sunrise" value="1">Sunrise
+            </label>
+            <label class="checkbox-inline">
+              <input id="sunset" type="checkbox" id="sunset" name="sunset" value="1">Sunset
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="inlineRadioOptions" class="col-sm-2 control-label">Repeat</label>
+          <div class="col-sm-10">
+            <label class="checkbox-inline">
+              <input type="checkbox" id="mon" name="mon" value="1">Mon
+            </label>
+            <label class="checkbox-inline">
+              <input type="checkbox" id="tue" name="tue" value="1">Tue
+            </label>
+            <label class="checkbox-inline">
+              <input type="checkbox" id="wed" name="wed" value="1">Wed
+            </label>
+            <label class="checkbox-inline">
+              <input type="checkbox" id="thu" name="thu" value="1">Thu
+            </label>
+            <label class="checkbox-inline">
+              <input type="checkbox" id="fri" name="fri" value="1">Fri
+            </label>
+            <label class="checkbox-inline">
+              <input type="checkbox" id="sat" name="sat" value="1">Sat
+            </label>
+            <label class="checkbox-inline">
+              <input type="checkbox" id="sun" name="sun" value="1">Sun
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="xon" class="col-sm-2 control-label">Switch</label>
+          <div class="col-sm-10">
+            <label class="radio-inline">
+              <input type="radio" name="xon" id="xon-1" value="1" checked>On
+            </label>
+            <label class="radio-inline">
+              <input type="radio" name="xon" id="xon-0" value="0">Off
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="output" class="col-sm-2 control-label">Output</label>
+          <div class="col-sm-10">
+            <select class="form-control" id="output" name="output">
+              <option value="R1">Relay 1</option>
+              <option value="R2">Relay 2</option>
+              <option value="R3">Relay 3</option>
+              <option value="R4">Relay 4</option>
+            </select>
+          </div>
+        </div>
+      </form>
+    <!-- ENTRY FORM END-->
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" href="javascript:void(0)" onclick="submit_form()">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm delete-->
+<div class="modal fade" id="deleteEntries">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Delete</h4>
+      </div>
+      <div class="modal-body">
+        <p>Delete selected items?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="deleteEntries()">Delete</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<script type="text/javascript">
+  console.log('calling scheduler javascript');
+  var data = [
+    {
+        "name": "bootstrap-table",
+        "stargazers_count": "526",
+        "forks_count": "122",
+        "description": "An extended Bootstrap table with radio, checkbox, sort, pagination, and other added features. (supports twitter bootstrap v2 and v3) "
+    },
+    {
+        "name": "multiple-select",
+        "stargazers_count": "288",
+        "forks_count": "150",
+        "description": "A jQuery plugin to select multiple elements with checkboxes :)"
+    },
+    {
+        "name": "bootstrap-show-password",
+        "stargazers_count": "32",
+        "forks_count": "11",
+        "description": "Show/hide password plugin for twitter bootstrap."
+    },
+    {
+        "name": "blog",
+        "stargazers_count": "13",
+        "forks_count": "4",
+        "description": "my blog"
+    },
+    {
+        "name": "scutech-redmine",
+        "stargazers_count": "6",
+        "forks_count": "3",
+        "description": "Redmine notification tools for chrome extension."
+    }
+];
+    var table = $('#table')
+    table.bootstrapTable({
+        data: data
+    });
+  table.on('dbl-click-row.bs.table', function (e, row, $element) {
+        console.log('row double click event');
+        console.log(e);
+        console.log(row);
+        console.log($element);
+        var w = $('#AddEntry');
+        w.modal('show');
+        w.find('.modal-title').text('Edit');
+        var form = w.find('form');
+        console.log(form);
+        populate_form(form, row);
+  })
+  $('#AddEntry').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget) // Button that triggered the modal
+    console.log('this is button');
+    console.log(button);
+    var recipient = button.data('whatever') // Extract info from data-* attributes
+    // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+    // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+    var modal = $(this)
+    modal.find('.modal-title').text('Add New')
+    //modal.find('.modal-body').html('sdkshdsjk hksjh dk ')
+  })
+    $('#AddEntry').on('hide.bs.modal', function (event) {
+      console.log('window closed - clear form');
+      var f = $(this).find('form').trigger("reset");
+      $("#time").prop('disabled', false);
+  })
+    function submit_form(){
+      console.log('TODO: submit form');
+      var w = $('#AddEntry');
+      var form = w.find('form');
+      console.log(form);
+      console.log(form.serialize());
+      console.log(form.serializeArray());
+      //form.submit();
+      var paramObj = {};
+      $.each(form.serializeArray(), function(_, kv) {
+        paramObj[kv.name] = kv.value;
+      });
+      console.log(paramObj);
+      w.modal('hide');
+      $.ajax({
+        method:'POST',
+        url:'/scheduleritems',
+        data : paramObj
+      }).done(function(msg){
+        $('#table').bootstrapTable('refresh');
+      });
+    }
+    function bool_col(value){
+      if(value == 1){
+        return '<span class="glyphicon glyphicon-ok" aria-hidden="true"></span>'
+      }else{
+        return '<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>'
+      }
+    }
+    function power_col(value){
+      if(value == 1){
+        return '<span class="glyphicon glyphicon-off" style="color:red" aria-hidden="true" data-toggle="tooltip" title="Power On"></span>'
+      }else{
+        return '<span class="glyphicon glyphicon-off" aria-hidden="true" data-toggle="tooltip" title="Power Off"></span>'
+      }
+    }
+    function populate_form(form, data){
+      $.each(data, function(key, value){
+        var $ctrl = $('[name='+key+']', form);
+        switch($ctrl.attr("type")){
+          case "text":
+          case "hidden":
+          $ctrl.val(value);
+          break;
+          case "radio":
+          console.log('RADIO COMP');
+          console.log($ctrl);
+          $ctrl.each(function(){
+            console.log($(this).attr('value')+':'+value);
+            if($(this).attr('value') == value) {  $(this).attr("checked",value); }else{
+               $(this).attr("checked",false);
+            } 
+          });
+          break;
+          case "checkbox":
+          console.log('is radio or checkbox');
+          ((value==1) ? $ctrl.prop('checked', true):$ctrl.prop('checked', false))
+          break;
+          default:
+          $ctrl.val(value);
+        }
+      });
+      validate_time();
+    }
+    function deleteEntries(){
+      $('#deleteEntries').modal('hide');
+      console.log('deleteEntries called');
+      var selections = $('#table').bootstrapTable('getSelections');
+      console.log(selections);
+      var ids = [];
+      $.each(selections,function(key, value){
+        console.log(key);
+        console.log(value);
+        ids.push(value.id);
+      });
+      console.log(ids);
+      $.ajax({
+        method:'POST',
+        url:'/deletescheduleritems',
+        data : {'ids':ids.join()}
+      }).done(function(msg){
+        $('#table').bootstrapTable('refresh');
+      });
+    }
+
+    $("#sunrise").click(function(){
+      var t = $(this);
+      if(t.is(':checked')){
+        $("#sunset").attr('checked', false);
+        $("#time").prop('disabled', true);
+      }else{
+        $("#time").prop('disabled', false);
+      }
+      validate_time();
+    });
+    $("#sunset").click(function(){
+      var t = $(this);
+      if(t.is(':checked')){
+        $("#sunrise").attr('checked', false);
+        $("#time").prop('disabled', true);
+      }else{
+        $("#time").prop('disabled', false);
+      }
+      validate_time();
+    });
+    function validate_time(){
+      var sunrise_checkbox = $("#sunrise");
+      var sunset_checkbox = $("#sunset");
+      var time = $("#time");
+      time.prop('disabled', (sunrise_checkbox.is(':checked') || sunset_checkbox.is(':checked')) );
+    }
+</script>
