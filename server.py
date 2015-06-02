@@ -1,20 +1,22 @@
 #!/usr/bin/env python
 import logging
 from tornado.options import define, options
-from tornado import websocket, web, ioloop, escape
+from tornado import websocket, web, ioloop, escape, httpserver
 import datetime
 from boardio import Outputs
 from database import Database
+from tests.remote import RemotePubNub
+import signal
+import config
 
 #using astral for sunrise/sunset calcs
 #http://pythonhosted.org/astral/
 import astral
 
-CITY = 'Lisbon'
-
 DEBUG = True
-LOG_FILE = '/tmp/server.log'
-define("port", default=8888, help="run on the given port", type=int)
+CONFIG_FILE_PATH = "config.ini"
+define("port", default=80, help="run on the given port", type=int)
+shutdown = False
 
 
 class BaseHandler(web.RequestHandler):
@@ -176,26 +178,47 @@ class SocketHandler(websocket.WebSocketHandler):
 class Server(web.Application):
 
     def __init__(self):
-        logging.basicConfig(filename='/home/linaro/www/log', format='%(asctime)s %(message)s', level=logging.DEBUG)
-        logging.info("starting service")
-        logging.info("DEBUG: %s" % DEBUG)
-        logging.debug("connecting to database")
+        #logging.basicConfig(filename='/home/linaro/www/log', format='%(asctime)s %(message)s', level=logging.DEBUG)
+        self.config = config.getConfiguration(CONFIG_FILE_PATH)
+        required_keys = ['city', 'LOG_FILE', 'DATABASE_PATH']
+        for key in required_keys:
+            if key not in self.config:
+                message = "*** ERROR: key \'%s\' is required" % key
+                raise Exception(message)
+        self.logger = logging.getLogger('server')
+        self.logger.setLevel(logging.DEBUG)
+        fh = logging.handlers.RotatingFileHandler(self.config['LOG_FILE'])
+        fh.setLevel(logging.DEBUG)
+        fmt = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh.setFormatter(fmt)
+        self.logger.addHandler(fh)
+        self.logger.info("starting service")
+        self.logger.info("DEBUG: %s" % DEBUG)
+        self.logger.debug("connecting to database")
         self.clients = []
-        self.db = Database()
+        self.db = Database(self.config['DATABASE_PATH'])
 
         _astral = astral.Astral()
         _astral.solar_depression = 'civil'
-        self.city = _astral[CITY]
+        self.city = _astral[self.config['city']]
+
+        #pubnub
+        if 'pubnub' in self.config:
+            if 'PUBNUB_PUBLISH_KEY' in self.config['pubnub'] and 'PUBNUB_SUBSCRIBE_KEY' in self.config['pubnub']:
+                self.pubnub = RemotePubNub(self.config['pubnub']['PUBNUB_PUBLISH_KEY'], self.config['pubnub']['PUBNUB_SUBSCRIBE_KEY'])
+                #self.pubnub.subscribe('control')
+            else:
+                del self.config['pubnub']
 
         #get outputs initial status
         init_outputs = []
         db_outputs = self.db.all('outputs')
         for output in db_outputs:
             init_outputs.append({'name': output['name'], 'value': output['value']})
-        logging.debug("initializing outputs")
+        self.logger.debug("initializing outputs")
 
         self.outputs = Outputs(init_outputs)
-        logging.info("starting server")
+        self.logger.info("starting server")
         options.parse_command_line()
         handlers = [
             (r"/", HomeHandler),
@@ -216,24 +239,31 @@ class Server(web.Application):
             "login_url": "/login",
             "debug": DEBUG
         }
-        web.Application.__init__(self, handlers, **settings)
-
+        self.logger.info("Application init")
         self.periodic_call = ioloop.PeriodicCallback(self.check_outputs, 1000)
+        self.logger.info("periodic call")
         self.periodic_call.start()
+        self.logger.info("periodic call - start")
+        return web.Application.__init__(self, handlers, **settings)
+        #super(Server, self).__init__(self, handlers, **settings)
 
     #function to set output and save status to database
     #"values" should be {'output':'','xon':''}
     def set_output(self, values):
-        print "set_output called"
+        #print "set_output called"
         if self.outputs.set(values['output'], values['xon']):  # save only if status was different
             #save status to database
             self.db.update('outputs', {'name': values['output'], 'value': values['xon']}, 'name')
 
     def check_outputs(self):
+        global shutdown
+        if shutdown is True:
+            self.stop()
+            return
         rows = self.db.all('outputs')
         for row in rows:
             if int(self.outputs.outputs[row['name']]['value']) != int(row['value']):
-                logging.info('SET %s - %s:%s' % (row['id'], row['name'], row['value']))
+                self.logger.info('SET %s - %s:%s' % (row['id'], row['name'], row['value']))
                 self.outputs.set(row['name'], row['value'])
         weekday = datetime.datetime.today().strftime("%a")
         #TODO: special sql query only weekday = 1
@@ -258,15 +288,36 @@ class Server(web.Application):
                 if now_hours == hours:
                     if now_minutes == minutes:
                         self.set_output(row)
+        self.pubnub_ios()
+
+    def pubnub_ios(self):
+        ios = self.outputs.outputs
+        message = {'outputs': '%s' % ios}
+        if 'pubnub' in self.config:
+            self.pubnub.publish('ios', message)
+
+    def stop(self):
+        #self.pubnub.pubnub.unsubscribe(channel='control')
+        #self.pubnub.pubnub.stop()
+        ioloop.IOLoop.instance().stop()
+        self.logger.info('shutting down server')
+
+
+def signal_handler(signum, frame):
+    global shutdown
+    logging.info('trying to stop server...')
+    shutdown = True
 
 
 def main():
     options.parse_command_line()
-    http_server = Server()
+    signal.signal(signal.SIGINT, signal_handler)
+    application = Server()
+    http_server = httpserver.HTTPServer(application)
     http_server.listen(options.port)
+    application.logger.info("server is listening...")
     ioloop.IOLoop.instance().start()
-    logging.warning("service ready")
-
+    application.logger.info("server is stopped...")
 
 if __name__ == "__main__":
     try:

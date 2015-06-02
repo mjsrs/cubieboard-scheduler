@@ -42,3 +42,10 @@ Start server
 ```sh
 $ sudo python server.py
 ```
+
+copy example_config.ini to main directory and rename it to config.ini or whatever you put in CONFIG_FILE_PATH
+
+Problems:
+
+problem:ntpd[] making interface scan socket: Permission denied
+solution:usermod -G inet ntp

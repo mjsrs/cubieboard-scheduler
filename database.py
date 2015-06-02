@@ -3,9 +3,9 @@ import sqlite3
 
 class Database():
 
-    def __init__(self):
+    def __init__(self, filePath):
         #open database
-        self.conn = sqlite3.connect('/home/linaro/www/database.db')
+        self.conn = sqlite3.connect(filePath)
         self.conn.row_factory = sqlite3.Row
         self.cursor = self.conn.cursor()
         self.cols = ['name', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'time', 'output', 'xon', 'sunrise', 'sunset']
