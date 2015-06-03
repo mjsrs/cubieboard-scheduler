@@ -153,7 +153,7 @@ class SocketHandler(websocket.WebSocketHandler):
     def open(self):
         if self not in self.application.clients:
             self.application.clients.append(self)
-        if len(self.application.clients) == 1:
+        if len(self.application.clients) > 0:
             self.callback = ioloop.PeriodicCallback(self.getIOs, 500)
             self.callback.start()
 
@@ -250,7 +250,6 @@ class Server(web.Application):
     #function to set output and save status to database
     #"values" should be {'output':'','xon':''}
     def set_output(self, values):
-        #print "set_output called"
         if self.outputs.set(values['output'], values['xon']):  # save only if status was different
             #save status to database
             self.db.update('outputs', {'name': values['output'], 'value': values['xon']}, 'name')
