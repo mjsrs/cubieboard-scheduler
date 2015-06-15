@@ -8,6 +8,7 @@ from database import Database
 from tests.remote import RemotePubNub
 import signal
 import config
+import Queue
 
 #using astral for sunrise/sunset calcs
 #http://pythonhosted.org/astral/
@@ -203,10 +204,11 @@ class Server(web.Application):
         self.city = _astral[self.config['city']]
 
         #pubnub
+        self.queue = Queue.Queue()
         if 'pubnub' in self.config:
             if 'PUBNUB_PUBLISH_KEY' in self.config['pubnub'] and 'PUBNUB_SUBSCRIBE_KEY' in self.config['pubnub']:
-                self.pubnub = RemotePubNub(self.config['pubnub']['PUBNUB_PUBLISH_KEY'], self.config['pubnub']['PUBNUB_SUBSCRIBE_KEY'])
-                #self.pubnub.subscribe('control')
+                self.pubnub = RemotePubNub(self.config['pubnub']['PUBNUB_PUBLISH_KEY'], self.config['pubnub']['PUBNUB_SUBSCRIBE_KEY'], self.queue)
+                self.pubnub.subscribe('control')
             else:
                 del self.config['pubnub']
 
@@ -250,6 +252,7 @@ class Server(web.Application):
     #function to set output and save status to database
     #"values" should be {'output':'','xon':''}
     def set_output(self, values):
+        print 'values: %s' % values
         if self.outputs.set(values['output'], values['xon']):  # save only if status was different
             #save status to database
             self.db.update('outputs', {'name': values['output'], 'value': values['xon']}, 'name')
@@ -294,12 +297,27 @@ class Server(web.Application):
         message = {'outputs': '%s' % ios}
         if 'pubnub' in self.config:
             self.pubnub.publish('ios', message)
+            #check commands queue
+            if self.queue.empty() is False:
+                self.parse_remote_cmd()
 
     def stop(self):
         #self.pubnub.pubnub.unsubscribe(channel='control')
         #self.pubnub.pubnub.stop()
         ioloop.IOLoop.instance().stop()
         self.logger.info('shutting down server')
+
+    def parse_remote_cmd(self):
+        #add more commands here and respective functions
+        allowed_cmds = {'set_output': self.set_output}
+        rcmd = self.queue.get_nowait()
+        cmds = rcmd.keys()
+        for cmd in cmds:
+            if cmd in allowed_cmds:
+                print 'cmd: %s' % rcmd[cmd]
+                allowed_cmds[cmd](rcmd[cmd])
+            else:
+                print 'Illegal command called: %s' % cmd
 
 
 def signal_handler(signum, frame):
