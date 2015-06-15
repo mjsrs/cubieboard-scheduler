@@ -5,7 +5,7 @@ from tornado import websocket, web, ioloop, escape, httpserver
 import datetime
 from boardio import Outputs
 from database import Database
-from tests.remote import RemotePubNub
+from remote import RemotePubNub
 import signal
 import config
 import Queue
