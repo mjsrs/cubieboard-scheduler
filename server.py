@@ -14,7 +14,7 @@ import config
 import astral
 
 DEBUG = True
-CONFIG_FILE_PATH = "config.ini"
+CONFIG_FILE_PATH = "/home/linaro/www/config.ini"
 define("port", default=80, help="run on the given port", type=int)
 shutdown = False
 
